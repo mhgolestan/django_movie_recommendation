@@ -66,17 +66,17 @@ def test_list_movies_with_paginations(client):
     assert 'count' in data
     assert 'next' in data
     assert 'previous' in data
-    assert 'result' in data
+    assert 'results' in data
 
     assert data['count'] == 10
     assert data['next'] is None
     assert data['previous'] is None
 
-    assert len(data['result']) == 10
+    assert len(data['results']) == 10
 
-    returned_movies_ids = {movie['id'] for movie in data['result']}
+    returned_movies_ids = {movie['id'] for movie in data['results']}
     expected_movies_ids = {movie.id for movie in movies}
     assert returned_movies_ids == expected_movies_ids
 
-    for movie in data['result']:
+    for movie in data['results']:
         assert set(movie.keys()) == {'id', 'title', 'genres'}
