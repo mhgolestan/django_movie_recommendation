@@ -13,7 +13,10 @@ def test_create_movie(client):
     url = reverse('movies:movie-list')
     data = {"title": "A New Hope",
             "genres": ["Sci-Fi", "Adventure"],
-            "year": 1997
+            "release_year": 1997,
+            "country": "USA",
+            "extra_data": {
+                "director": "George Lucas"},
             }
 
     response = client.post(url, data=data, content_type='application/json')
@@ -32,7 +35,7 @@ def test_retrieve_movie(client):
     assert response.data['id'] == movie.id
     assert response.data['title'] == movie.title
     assert response.data['genres'] == movie.genres
-    assert response.data['year'] == int(movie.year)
+    assert response.data['release_year'] == int(movie.release_year)
 
 
 @pytest.mark.django_db
@@ -82,7 +85,9 @@ def test_list_movies_with_paginations(client):
     assert returned_movies_ids == expected_movies_ids
 
     for movie in data['results']:
-        assert set(movie.keys()) == {'id', 'title', 'genres', "year"}
+        assert set(movie.keys()) == {'id', 'title',
+                                     'genres', "release_year",
+                                     "country", "extra_data"}
 
 
 @pytest.mark.django_db

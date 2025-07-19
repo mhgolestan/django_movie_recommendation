@@ -8,7 +8,11 @@ def test_valid_movie_serializer():
     valid_data = {
         "title": "A New Hope",
         "genres": ["Sci-Fi", "Adventure"],
-        "year": 1997
+        "release_year": 1997,
+        "country": "USA",
+        "extra_data": {
+            "director": "George Lucas"
+        }
     }
     serializer = MovieSerializer(data=valid_data)
     assert serializer.is_valid()
@@ -32,13 +36,17 @@ def test_invalid_movie_serializer():
 
 @pytest.mark.django_db
 def test_serialize_movie_instance():
-    movie = Movie.objects.create(title="A New Hope", genres=["Sci-Fi", "Adventure"], year=1977)
+    movie = Movie.objects.create(title="A New Hope",
+                                 genres=["Sci-Fi", "Adventure"],
+                                 release_year=1977)
     serializer = MovieSerializer(movie)
     assert serializer.data == {
         "id": movie.id,
         "title": movie.title,
         "genres": movie.genres,
-        "year": movie.year
+        "release_year": movie.release_year,
+        "country": movie.country,
+        "extra_data": movie.extra_data
     }
 
 
