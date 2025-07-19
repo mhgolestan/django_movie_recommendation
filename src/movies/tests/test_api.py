@@ -11,7 +11,9 @@ from .factories import MovieFactory
 def test_create_movie(client):
     url = reverse('movies:movie-list')
     data = {"title": "A New Hope",
-            "genres": ["Sci-Fi", "Adventure"]}
+            "genres": ["Sci-Fi", "Adventure"],
+            "year": 1997
+            }
 
     response = client.post(url, data=data, content_type='application/json')
     assert response.status_code == status.HTTP_201_CREATED, response.json()
@@ -26,11 +28,11 @@ def test_retrieve_movie(client):
     response = client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {
-        "id": movie.id,
-        "title": movie.title,
-        "genres": movie.genres
-    }
+    assert response.data['id'] == movie.id
+    assert response.data['title'] == movie.title
+    assert response.data['genres'] == movie.genres
+    assert response.data['year'] == int(movie.year)
+
 
 @pytest.mark.django_db
 def test_update_movie(client):
@@ -79,4 +81,4 @@ def test_list_movies_with_paginations(client):
     assert returned_movies_ids == expected_movies_ids
 
     for movie in data['results']:
-        assert set(movie.keys()) == {'id', 'title', 'genres'}
+        assert set(movie.keys()) == {'id', 'title', 'genres', "year"}
