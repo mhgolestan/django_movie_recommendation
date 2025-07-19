@@ -23,7 +23,7 @@ class MovieAPIView(views.APIView):
             serializer = MovieSerializer(movies, many=True)
             return Response({
                 "count": len(serializer.data),
-                "results": serializer.data,
+                "result": serializer.data,
                 "next": None,
                 "previous": None
             })
