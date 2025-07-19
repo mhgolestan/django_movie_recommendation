@@ -11,11 +11,11 @@ from .factories import MovieFactory
 def test_create_movie(client):
     url = reverse('movies:movie-list')
     data = {"title": "A New Hope",
-            "genres": json.dumps(["Sci-Fi", "Adventure"])}
+            "genres": ["Sci-Fi", "Adventure"]}
 
-    response = client.post(url, json=data)
+    response = client.post(url, data=data, content_type='application/json')
     assert response.status_code == status.HTTP_201_CREATED, response.json()
-    assert Movie.objects.filter(title="A New Hope") == 1
+    assert Movie.objects.count() == 1
 
 
 @pytest.mark.django_db
