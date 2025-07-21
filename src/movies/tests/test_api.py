@@ -2,10 +2,12 @@ import json
 import pytest
 from django.test import override_settings
 from django.urls import reverse
+from pytest_django.fixtures import client
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from movies.models import Movie, Book
-from .factories import MovieFactory, BookFactory
+from .factories import MovieFactory, BookFactory, UserFactory
 
 
 @pytest.mark.django_db
@@ -168,3 +170,79 @@ def test_list_books_with_paginations(client):
 
     for book in data['results']:
         assert set(book.keys()) == {'id', 'title', 'author', 'isbn', 'publication_year'}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "new_preferences, expected_genre",
+    [
+    ({"genre": "sci-fi"}, "sci-fi"),
+    ({"genre": "drama"}, "drama"),
+    ({"genre": "action"}, "action"),
+    ({"genre": "sci-fi", "actor": "Sigourney Weaver", "year": "1979"}, "sci-fi"),
+    ]
+)
+def test_add_and_retrieve_preferences_success(new_preferences, expected_genre):
+    user = UserFactory()
+    client = APIClient()
+
+    preference_url = reverse("user-preferences", kwargs={"user_id": user.id})
+
+    response = client.post(preference_url, {"new_preferences": new_preferences}, format="json")
+    assert response.status_code in [200, 201]
+
+    response = client.get(preference_url)
+    assert response.status_code == 200
+    assert response.data["genre"] == expected_genre
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    [
+    ({}),
+    ({"genreee": "comedy"}),
+    ]
+)
+def test_add_and_retrieve_preferences_failure(new_preferences):
+    user = UserFactory()
+    client = APIClient()
+
+    preference_url = reverse("user-preferences", kwargs={"user_id": user.id})
+    response = client.post(preference_url, {"new_preferences": new_preferences}, format="json")
+    assert response.status_code == 400 ,response.json()
+
+
+@pytest.mark.django_db
+def test_add_and_retrieve_watch_history_with_movie_id() -> None:
+    user = UserFactory()
+    client = APIClient()
+
+    watch_history_url = reverse("user-watch-history", kwargs={"user_id": user.id})
+    movie_1 = MovieFactory(title="The Godfather",
+                           release_year=1972,
+                           directors=["Francis Ford Coppola"],
+                           genres= ["Crime", "Drama"])
+    movie_2 = MovieFactory(title="Taxi Driver",
+                           release_year=1976,
+                           directors=["Martin Scorsese"],
+                           genres=["Crime", "Drama"])
+    for movie in [movie_1, movie_2]:
+        response = client.post(watch_history_url, {"movie_id": movie.id}, format="json")
+        assert response.status_code == 201, response.json()
+
+    response = client.get(watch_history_url)
+    assert response.status_code == 200
+    retrieved_movie_ids = [item["title"] for item in response.data["watch_history"]]
+    for movie_title in [movie_1.title, movie_2.title]:
+        assert movie_title in retrieved_movie_ids
+
+@pytest.mark.django_db
+def test_add_invalid_movie_id_to_watch_history() -> None:
+    user = UserFactory()
+    client = APIClient()
+
+    watch_history_url = reverse("user-watch-history", kwargs={"user_id": user.id})
+
+    invalid_movie_id = 999
+    response = client.post(watch_history_url, {"movie_id": invalid_movie_id}, format="json")
+    assert response.status_code == 404
