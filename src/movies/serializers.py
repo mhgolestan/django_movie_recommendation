@@ -40,4 +40,20 @@ class AddToWatchHistorySerializer(serializers.Serializer):
             raise serializers.ValidationError("Movie with given id does not exist.")
         return value
 
+class PreferencesSerializer(serializers.Serializer):
+    genre = serializers.ListField(child=serializers.CharField(),
+                                  required=False)
+    director = serializers.ListField(child=serializers.CharField(),
+                                     required=False)
+    actor = serializers.ListField(child=serializers.CharField(),
+                                  required=False)
+    year = serializers.ListField(child=serializers.CharField(),
+                                 required=False)
+
+
+class WatchHistorySerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255)
+    year = serializers.IntegerField()
+    director = serializers.CharField(max_length=255)
+    genre = serializers.CharField(max_length=255)
 
