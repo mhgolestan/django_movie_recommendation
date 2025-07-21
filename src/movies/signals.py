@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from typing import Any, Type
 
-from movies.models import UserMoviePreference
+from movies.models import UserMoviePreferences
 
 User = get_user_model()
 
@@ -16,6 +16,6 @@ def create_or_update_user_movie_preferences(
         created: bool,
         **kwargs: Any) -> None:
     if created:
-        UserMoviePreference.objects.create(user=instance)
+        UserMoviePreferences.objects.create(user=instance)
     else:
         instance.movie_preferences.save()
