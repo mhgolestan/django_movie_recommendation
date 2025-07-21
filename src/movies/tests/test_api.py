@@ -198,6 +198,7 @@ def test_add_and_retrieve_preferences_success(new_preferences, expected_genre):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    "new_preferences",
     [
     ({}),
     ({"genreee": "comedy"}),
