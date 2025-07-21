@@ -25,10 +25,10 @@ class Movie(models.Model):
         return self.title
 
 
-class UserMoviePreference(models.Model):
+class UserMoviePreferences(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
-                                related_name="movie_preference")
+                                related_name="movie_preferences")
     preferences = JSONField(default=dict,
                             help_text="Stores user preferences for movies like genres, directors, etc.")
     watch_history = JSONField(default=dict,
