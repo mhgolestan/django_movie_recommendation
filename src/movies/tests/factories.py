@@ -23,3 +23,6 @@ class BookFactory(DjangoModelFactory):
     isbn = Faker('isbn13')
     publication_year = Faker('year')
 
+
+class UserFactory:
+    pass
