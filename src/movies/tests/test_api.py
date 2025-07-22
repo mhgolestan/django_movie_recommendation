@@ -1,5 +1,6 @@
 import json
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from pytest_django.fixtures import client
@@ -247,3 +248,41 @@ def test_add_invalid_movie_id_to_watch_history() -> None:
     invalid_movie_id = 999
     response = client.post(watch_history_url, {"movie_id": invalid_movie_id}, format="json")
     assert response.status_code == 404
+
+test_data = [
+    (
+        "file.csv",
+        "text/csv",
+        b"title,genres,extra_data\ntest,comedy,{\"directors\": [\"name\"]}\n",
+        201,
+    ),
+    (
+        "file.json",
+        "application/json",
+        b'[{"title": "test", "genres": ["comedy"], "extra_data": {"directors": ["name"]}}]',
+        201,
+    ),
+    (
+        "file.txt",
+        "text/plain",
+        b"This is a test.",
+        400,
+    ),
+]
+
+@pytest.mark.parametrize(
+    "file_name, content_type, file_content, expected_status", test_data
+)
+@pytest.mark.django_db
+def test_general_upload_view(
+        client: APIClient,
+        file_name: str,
+        content_type: str,
+        file_content: str,
+        expected_status: int):
+    url = reverse("movies:file-upload")
+    upload_file = SimpleUploadedFile(name=file_name,
+                                     content=file_content,
+                                     content_type=content_type)
+    response = client.post(url, {"file": upload_file}, format="multipart")
+    assert response.status_code == expected_status
