@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import serializers
 from movies.models import Movie, Book
 
@@ -56,4 +57,16 @@ class WatchHistorySerializer(serializers.Serializer):
     year = serializers.IntegerField()
     director = serializers.CharField(max_length=255)
     genre = serializers.CharField(max_length=255)
+
+
+class GeneralFileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    def validate_file(self, value: InMemoryUploadedFile) -> InMemoryUploadedFile:
+        if value.size > 1024 * 1024 * 1024:
+            raise serializers.ValidationError("File size exceeds the limit of 10MB")
+        allowed_types = ["text/csv", "application/json", "application/xml"]
+        if value.content_type not in allowed_types:
+            raise serializers.ValidationError("Unsupported file type.")
+        return value
 
