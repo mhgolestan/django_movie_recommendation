@@ -29,6 +29,7 @@ def add_preference(user_id: int, new_preferences: dict[str,  Any]) -> None:
         user_preferences.save()
 
 def add_watch_history(user_id: int, movie_id: int) -> None:
+    user = get_user_model().objects.get(id=user_id)
     movie = get_object_or_404(Movie, id=movie_id)
     movie_info = {
         "title": movie.title,
