@@ -189,14 +189,14 @@ def test_add_and_retrieve_preferences_success(new_preferences, expected_genre):
     user = UserFactory()
     client = APIClient()
 
-    preference_url = reverse("user-preferences", kwargs={"user_id": user.id})
+    preference_url = reverse("movies:user-preferences", kwargs={"user_id": user.id})
 
     response = client.post(preference_url, {"new_preferences": new_preferences}, format="json")
     assert response.status_code in [200, 201]
 
     response = client.get(preference_url)
     assert response.status_code == 200
-    assert response.data["genre"] == expected_genre
+    assert response.data["genre"] == [expected_genre]
 
 
 @pytest.mark.django_db
