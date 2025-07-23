@@ -67,7 +67,7 @@ class GeneralUploadView(APIView):
     def post(self, request, *args: Any, **kwargs: Any) -> Response:
         serializer = GeneralFileUploadSerializer(data=request.data)
         if serializer.is_valid():
-            upload_file = serializer.validate_file["file"]
+            upload_file = serializer.validated_data["file"]
             file_type = upload_file.content_type
 
             with temporary_file(upload_file) as file_path:
