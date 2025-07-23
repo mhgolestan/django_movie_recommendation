@@ -29,7 +29,7 @@ class UserPreferencesView(APIView):
         if serializer.is_valid():
             add_preference(user_id, serializer.validated_data["new_preferences"])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request: Request, user_id: int) -> Response:
         data = user_preferences(user_id)
@@ -46,7 +46,7 @@ class WatchHistoryView(APIView):
         if serializer.is_valid():
             add_watch_history(
                 user_id=user_id,
-                movie_id=serializer.validated_data["id"]
+                movie_id=serializer.validated_data["movie_id"]
             )
             return Response(
                 {"message": "Movie added to watch history"},

@@ -211,7 +211,7 @@ def test_add_and_retrieve_preferences_failure(new_preferences):
     user = UserFactory()
     client = APIClient()
 
-    preference_url = reverse("user-preferences", kwargs={"user_id": user.id})
+    preference_url = reverse("movies:user-preferences", kwargs={"user_id": user.id})
     response = client.post(preference_url, {"new_preferences": new_preferences}, format="json")
     assert response.status_code == 400 ,response.json()
 
@@ -221,15 +221,23 @@ def test_add_and_retrieve_watch_history_with_movie_id() -> None:
     user = UserFactory()
     client = APIClient()
 
-    watch_history_url = reverse("user-watch-history", kwargs={"user_id": user.id})
+    watch_history_url = reverse("movies:user-watch-history", kwargs={"user_id": user.id})
     movie_1 = MovieFactory(title="The Godfather",
                            release_year=1972,
-                           directors=["Francis Ford Coppola"],
-                           genres= ["Crime", "Drama"])
+                           extra_data=
+                           {
+                               "directors":["Francis Ford Coppola"],
+                               "genres": ["Crime", "Drama"],
+                           }
+    )
     movie_2 = MovieFactory(title="Taxi Driver",
                            release_year=1976,
-                           directors=["Martin Scorsese"],
-                           genres=["Crime", "Drama"])
+                           extra_data=
+                           {
+                               "directors":["Martin Scorsese"],
+                               "genres":["Crime", "Drama"],
+                           }
+    )
     for movie in [movie_1, movie_2]:
         response = client.post(watch_history_url, {"movie_id": movie.id}, format="json")
         assert response.status_code == 201, response.json()
@@ -245,11 +253,11 @@ def test_add_invalid_movie_id_to_watch_history() -> None:
     user = UserFactory()
     client = APIClient()
 
-    watch_history_url = reverse("user-watch-history", kwargs={"user_id": user.id})
+    watch_history_url = reverse("movies:user-watch-history", kwargs={"user_id": user.id})
 
     invalid_movie_id = 999
     response = client.post(watch_history_url, {"movie_id": invalid_movie_id}, format="json")
-    assert response.status_code == 404
+    assert response.status_code == 400
 
 test_data = [
     (
