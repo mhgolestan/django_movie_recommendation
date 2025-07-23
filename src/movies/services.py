@@ -21,9 +21,10 @@ def add_preference(user_id: int, new_preferences: dict[str,  Any]) -> None:
             user_id=user_id, defaults={"preferences": {}}
         )
         current_preferences = defaultdict(list, user_preferences.preferences)
-        for key, value in new_preferences.items():
-            if value not in current_preferences[key]:
-                current_preferences[key].append(value)
+        for key, values in new_preferences.items():
+            for value in values:
+                if value not in current_preferences[key]:
+                    current_preferences[key].append(value)
         user_preferences.preferences = dict(current_preferences)
         user_preferences.save()
 
