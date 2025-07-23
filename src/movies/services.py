@@ -121,5 +121,28 @@ class FileProcessor:
             raise ValueError(f"Unsupported file type: {file_type}")
         return movies_processed
 
+def create_or_update_movie(
+        title: str,
+        genres: list,
+        country: str | None = None,
+        extra_data: dict[Any, Any] | None = None,
+        release_year: int | None = None
+) -> Tuple[Movie, bool]:
+    try:
+        current_year = datetime.now().year
+        if release_year is not None and (release_year < 1888 or release_year > current_year):
+            raise ValidationError("The release year must be between 1888 and the current year.")
 
+        movie, created = Movie.objects.update_or_create(
+                title=title,
+                defaults={
+                    "genres": genres,
+                    "country": country,
+                    "extra_data": extra_data,
+                    "release_year": release_year
+                }
+            )
+        return movie, created
+    except Exception as e:
+        raise ValidationError(f"Failed to create or update the movie: {str(e)}")
 
