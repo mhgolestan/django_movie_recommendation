@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime
 from typing import Any
+import xml.etree.ElementTree as ET
 
 import requests
 from tqdm import tqdm
@@ -59,6 +60,39 @@ def fetch_by_year(year: int) -> list[dict[str, Any]]:
     return data
 
 
+def write_to_xml(data: list[dict[str, Any]], year: int) -> None:
+    # Create the root element
+    root = ET.Element("movies")
+
+    # Add each movie as a child element
+    for item in data[0:10]:
+        movie = ET.SubElement(root, "movie")
+
+        # Add title
+        title = ET.SubElement(movie, "title")
+        title.text = item.get("filmLabel", {}).get("value", "")
+
+        # Add genres
+        genres = ET.SubElement(movie, "genres")
+        genres.text = item.get("genres", {}).get("value", "")
+
+        # Add countries
+        countries = ET.SubElement(movie, "countries")
+        countries.text = item.get("countries", {}).get("value", "")
+
+        # Add directors
+        directors = ET.SubElement(movie, "directors")
+        directors.text = item.get("directors", {}).get("value", "")
+
+    # Create XML tree and write to file
+    tree = ET.ElementTree(root)
+    xml_file_name = f"movies_data_{year}_to_current.xml"
+
+    # Use indentation for pretty printing
+    ET.indent(tree, space="  ")
+    tree.write(xml_file_name, encoding="utf-8", xml_declaration=True)
+
+
 def fetch_all_data() -> None:
     current_year = datetime.now().year
     beginning_year: int = 2010
@@ -82,6 +116,9 @@ def fetch_all_data() -> None:
                         {"directors": directors},
                     ]
                 )
+
+        # write to xml file
+        write_to_xml(data, year)
 
 
 if __name__ == "__main__":
