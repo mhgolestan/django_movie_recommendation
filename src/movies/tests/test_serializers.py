@@ -1,7 +1,8 @@
 import pytest
 
 from movies.models import Movie, Book
-from movies.serializers import MovieSerializer, BookSerializer
+from movies.serializers import MovieSerializer, BookSerializer, PreferencesDetainSerializer
+
 
 @pytest.mark.django_db
 def test_valid_movie_serializer():
@@ -48,6 +49,46 @@ def test_serialize_movie_instance():
         "country": movie.country,
         "extra_data": movie.extra_data
     }
+
+
+@pytest.mark.django_db
+def test_valid_preferences_serializer():
+    valid_data = {
+        "genre": "",
+        "director": "",
+        "actor": "",
+        "year": 2010
+    }
+    serializer = PreferencesDetainSerializer(data=valid_data)
+    assert serializer.is_valid()
+
+
+@pytest.mark.django_db
+def test_invalid_preferences_serializer():
+    # Test case where all values are empty or None
+    all_empty_data = {
+        "genre": "",
+        "director": "",
+        "actor": "",
+        "year": None
+    }
+    serializer = PreferencesDetainSerializer(data=all_empty_data)
+    assert not serializer.is_valid()
+
+
+    invalid_year_data = {
+        "year": 1800
+    }
+    serializer = PreferencesDetainSerializer(data=invalid_year_data)
+    assert not serializer.is_valid()
+    assert "year" in serializer.errors
+
+    invalid_year_data = {
+        "year": 2100
+    }
+    serializer = PreferencesDetainSerializer(data=invalid_year_data)
+    assert not serializer.is_valid()
+    assert "year" in serializer.errors
 
 
 @pytest.mark.django_db
