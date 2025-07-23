@@ -1,5 +1,8 @@
+from contextlib import contextmanager
+from typing import Any
 from urllib.request import Request
 
+from django.core.files.storage import default_storage
 from rest_framework import views, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -7,8 +10,9 @@ from rest_framework import generics
 from rest_framework.views import APIView
 
 from movies.models import Movie, Book
-from movies.serializers import MovieSerializer, BookSerializer, AddPreferenceSerializer, AddToWatchHistorySerializer
-from movies.services import add_preference, user_preferences, user_watch_history, add_watch_history
+from movies.serializers import MovieSerializer, BookSerializer, AddPreferenceSerializer, AddToWatchHistorySerializer, \
+    GeneralFileUploadSerializer
+from movies.services import add_preference, user_preferences, user_watch_history, add_watch_history, FileProcessor
 
 
 class MovieListCreateAPIView(generics.ListCreateAPIView):
@@ -50,6 +54,31 @@ class WatchHistoryView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@contextmanager
+def temporary_file(uploaded_file):
+    try:
+        file_name = default_storage.save(uploaded_file.name, uploaded_file)
+        file_path = default_storage.path(file_name)
+        yield file_path
+    finally:
+        default_storage.delete(file_name)
+
+class GeneralUploadView(APIView):
+    def post(self, request, *args: Any, **kwargs: Any) -> Response:
+        serializer = GeneralFileUploadSerializer(data=request.data)
+        if serializer.is_valid():
+            upload_file = serializer.validate_file["file"]
+            file_type = upload_file.content_type
+
+            with temporary_file(upload_file) as file_path:
+                processor = FileProcessor()
+                movies_processed = processor.process(file_path, file_type)
+                return Response(
+                    {"message": f"{movies_processed} movies processed successfully."},
+                    status=status.HTTP_201_CREATED,
+                )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BookListCreateAPIView(generics.ListCreateAPIView):
