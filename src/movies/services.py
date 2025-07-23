@@ -1,5 +1,6 @@
 import csv
 import json
+import sys
 from collections import defaultdict
 from datetime import datetime
 from typing import Any, Tuple
@@ -93,6 +94,14 @@ def create_or_update_movie(
 
 
 def parse_csv(file_path: str) -> int:
+    max_int = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(max_int)
+            break
+        except OverflowError:
+            max_int = int(max_int/10)
+
     movies_processed = 0
     with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file)
@@ -109,6 +118,10 @@ def parse_json(file_path: str) -> int:
             create_or_update_movie(**item)
             movies_processed += 1
     return movies_processed
+
+def parse_xml(file_path: str) -> int:
+    movies_processed = 0
+
 
 
 class FileProcessor:
