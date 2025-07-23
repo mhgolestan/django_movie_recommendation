@@ -1,13 +1,15 @@
-import json
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
+from movies.api import GeneralUploadView
+from movies.models import Movie, Book
+from movies.serializers import GeneralFileUploadSerializer
+from movies.services import FileProcessor
 from pytest_django.fixtures import client
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from movies.models import Movie, Book
 from .factories import MovieFactory, BookFactory, UserFactory
 
 
@@ -280,9 +282,40 @@ def test_general_upload_view(
         content_type: str,
         file_content: str,
         expected_status: int):
+    """
+    Test file uploads with different file types and ensure proper validation occurs.
+    """
     url = reverse("movies:file-upload")
     upload_file = SimpleUploadedFile(name=file_name,
                                      content=file_content,
                                      content_type=content_type)
     response = client.post(url, {"file": upload_file}, format="multipart")
     assert response.status_code == expected_status
+
+
+@pytest.mark.django_db
+def test_general_upload_view_invalid_file_size(client):
+    url = reverse("movies:file-upload")
+    oversized_file = SimpleUploadedFile(
+        name="oversized_file.csv",
+        content=b"A" * (10 * 1024 * 1024 + 1),  # 10MB + 1 byte
+        content_type="text/csv"
+    )
+
+    response = client.post(url, {"file": oversized_file}, format="multipart")
+    assert response.status_code == 400
+    assert "File size exceeds the limit" in str(response.data)
+
+
+@pytest.mark.django_db
+def test_general_upload_view_unsupported_file_type(client):
+    url = reverse("movies:file-upload")
+    unsupported_file = SimpleUploadedFile(
+        name="unsupported_file.exe",
+        content=b"This is an invalid file type.",
+        content_type="application/x-msdownload"
+    )
+
+    response = client.post(url, {"file": unsupported_file}, format="multipart")
+    assert response.status_code == 400
+    assert "Unsupported file type" in str(response.data)
