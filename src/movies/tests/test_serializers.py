@@ -1,7 +1,12 @@
 import pytest
 
 from movies.models import Movie, Book
-from movies.serializers import MovieSerializer, BookSerializer, PreferencesDetainSerializer
+from movies.serializers import (
+    MovieSerializer,
+    BookSerializer,
+    PreferencesDetainSerializer,
+    AddToWatchHistorySerializer
+)
 
 
 @pytest.mark.django_db
@@ -89,6 +94,51 @@ def test_invalid_preferences_serializer():
     serializer = PreferencesDetainSerializer(data=invalid_year_data)
     assert not serializer.is_valid()
     assert "year" in serializer.errors
+
+
+@pytest.mark.django_db
+def test_add_to_watch_history_serializer_invalid_data():
+    # Test with non-existent movie ID
+    invalid_data = {
+        "movie_id": 999
+    }
+    serializer = AddToWatchHistorySerializer(data=invalid_data["movie_id"])
+    assert not serializer.is_valid()
+
+
+@pytest.mark.django_db
+def test_add_to_watch_history_serializer_valid_data():
+    # Test with valid movie ID
+    movie = Movie.objects.create(
+        title="Test Movie",
+        genres=["Action"],
+        release_year=2020
+    )
+    valid_data = {
+        "movie_id": movie.id
+    }
+    serializer = AddToWatchHistorySerializer(data=valid_data)
+    assert serializer.is_valid()
+
+
+@pytest.mark.django_db
+def test_add_to_watch_history_serializer_valid_data_missing_movie_id():
+    #Test with missing movie_id
+    missing_id_data = {}
+    serializer = AddToWatchHistorySerializer(data=missing_id_data)
+    assert not serializer.is_valid()
+    assert "movie_id" in serializer.errors
+
+
+@pytest.mark.django_db
+def test_add_to_watch_history_serializer_valid_movie_id_type():
+    # Test with invalid type for movie_id
+    invalid_type_data = {
+        "movie_id": "not_an_integer"
+    }
+    serializer = AddToWatchHistorySerializer(data=invalid_type_data)
+    assert not serializer.is_valid()
+    assert "movie_id" in serializer.errors
 
 
 @pytest.mark.django_db

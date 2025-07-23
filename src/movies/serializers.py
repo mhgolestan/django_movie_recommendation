@@ -36,7 +36,7 @@ class AddPreferenceSerializer(serializers.Serializer):
 class AddToWatchHistorySerializer(serializers.Serializer):
     movie_id = serializers.IntegerField()
 
-    def validate_id(self, value: int) -> int:
+    def validate_movie_id(self, value: int) -> int:
         if not Movie.objects.filter(id=value).exists():
             raise serializers.ValidationError("Movie with given id does not exist.")
         return value
