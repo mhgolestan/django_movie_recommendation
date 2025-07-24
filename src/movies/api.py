@@ -10,10 +10,15 @@ from rest_framework import generics
 from rest_framework.views import APIView
 
 from movies.models import Movie, Book
-from movies.serializers import MovieSerializer, BookSerializer, AddPreferenceSerializer, AddToWatchHistorySerializer, \
+from movies.serializers import (
+    MovieSerializer,
+    BookSerializer,
+    AddPreferenceSerializer,
+    AddToWatchHistorySerializer,
     GeneralFileUploadSerializer
+)
 from movies.services import add_preference, user_preferences, user_watch_history, add_watch_history, FileProcessor
-
+from movies.tasks import process_file
 
 class MovieListCreateAPIView(generics.ListCreateAPIView):
     queryset = Movie.objects.all().order_by("id")
@@ -71,11 +76,11 @@ class GeneralUploadView(APIView):
             file_type = upload_file.content_type
 
             with temporary_file(upload_file) as file_path:
-                processor = FileProcessor()
-                movies_processed = processor.process(file_path, file_type)
+                # Celery call using delay
+                process_file.delay(file_path, file_type)
                 return Response(
-                    {"message": f"{movies_processed} movies processed successfully."},
-                    status=status.HTTP_201_CREATED,
+                    {"message": "Your file is being processed."},
+                    status=status.HTTP_202_ACCEPTED,
                 )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
