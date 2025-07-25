@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Tuple
 
 from django.contrib.auth import get_user_model
+from django.core.files.storage import default_storage
 from django.db import transaction, IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
@@ -128,14 +129,20 @@ def parse_xml(file_path: str) -> int:
 
 
 class FileProcessor:
-    def process(self, file_path: str, file_type: str) -> int:
-        if file_type == "text/csv":
-            movies_processed = parse_csv(file_path)
-        elif file_type == "application/json":
-            movies_processed = parse_json(file_path)
+    def process(self, file_name: str, file_type: str) -> int:
+        # Check if the file exists in the default storage
+        if default_storage.exists(file_name):
+            # Open the file directly from storage
+            with default_storage.open(file_name, "r") as file:
+                if file_type == "text/csv":
+                    movies_processed = parse_csv(file)
+                elif file_type == "application/json":
+                    movies_processed = parse_json(file)
+                else:
+                    raise ValidationError("Invalid file type")
+                return movies_processed
         else:
-            raise ValueError(f"Unsupported file type: {file_type}")
-        return movies_processed
+            raise ValidationError("File does not exist in storage.")
 
 def create_or_update_movie(
         title: str,

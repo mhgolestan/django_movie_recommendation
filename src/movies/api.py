@@ -1,7 +1,10 @@
+import os
+import uuid
 from contextlib import contextmanager
 from typing import Any
 from urllib.request import Request
 
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from rest_framework import views, status
 from rest_framework.generics import get_object_or_404
@@ -72,16 +75,21 @@ class GeneralUploadView(APIView):
     def post(self, request, *args: Any, **kwargs: Any) -> Response:
         serializer = GeneralFileUploadSerializer(data=request.data)
         if serializer.is_valid():
-            upload_file = serializer.validated_data["file"]
-            file_type = upload_file.content_type
+            uploaded_file = serializer.validated_data["file"]
+            file_type = uploaded_file.content_type
 
-            with temporary_file(upload_file) as file_path:
-                # Celery call using delay
-                process_file.delay(file_path, file_type)
-                return Response(
-                    {"message": "Your file is being processed."},
-                    status=status.HTTP_202_ACCEPTED,
-                )
+            # Extract the file extension
+            file_extension = os.path.splitext(uploaded_file.name)[1]
+            # Generate a unique file name using UUID
+            unique_file_name = f"{uuid.uuid4()}{file_extension}"
+            # Save the file directly to the default storage
+            file_name = default_storage.save(unique_file_name,
+                                             ContentFile(uploaded_file.read()))
+            process_file.delay(file_name, file_type)
+            return Response(
+                {"message": "Job enqueued for processing."},
+                status=status.HTTP_202_ACCEPTED,
+            )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
