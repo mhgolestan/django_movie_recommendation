@@ -63,8 +63,8 @@ class GeneralFileUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
 
     def validate_file(self, value: InMemoryUploadedFile) -> InMemoryUploadedFile:
-        if value.size > 10 * 1024 * 1024:
-            raise serializers.ValidationError("File size exceeds the limit of 10MB")
+        # if value.size > 10 * 1024 * 1024:
+        #     raise serializers.ValidationError("File size exceeds the limit of 10MB")
         allowed_types = ["text/csv", "application/json", "application/xml"]
         if value.content_type not in allowed_types:
             raise serializers.ValidationError("Unsupported file type.")
